@@ -44,7 +44,7 @@ def send_mail():
 
                 # Write Error in log files
                 with open(main.log_path, "a") as log:
-                    log.write(main.today + ":\n")
+                    log.write(main.get_date() + ":\n")
                     log.write("-- Email Error --\n")
                     log.write(str(e) + "\n")
                     log.write("\n")
@@ -62,7 +62,7 @@ def send_mail():
 
                     # Write Error in log files
                     with open(main.log_path, "a") as log:
-                        log.write(main.today + ":\n")
+                        log.write(main.get_date() + ":\n")
                         log.write("-- Email Error --\n")
                         log.write("Couldnt Reach Email-Server, Check your Bot Configurations" + "\n")
                         log.write("\n")
@@ -77,6 +77,6 @@ def send_mail():
             # Writes a successful entry in log files when no  error occurred
             if succes == 0:
                 with open(main.log_path, "a") as log:
-                    log.write(main.today + ":\n")
+                    log.write(main.get_date() + ":\n")
                     log.write("Email successfully send to: " + email + "\n")
                     log.write("\n")

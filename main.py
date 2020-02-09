@@ -5,12 +5,14 @@ from datetime import datetime
 import os
 
 log_path = os.path.join(os.path.dirname(__file__), "log")
-today = str(datetime.now().strftime("%d.%m.%Y - %H:%M:%S"))
+
+
+def get_date():
+    return str(datetime.now().strftime("%d.%m.%Y - %H:%M:%S"))
 
 
 # method to be executed at the end
 def final_one():
-    global today
     print("Application Started.")
     print("Remember to check the log for Error Messages -> " + log_path)
     print("To Exit Press: ⌃C")
@@ -19,12 +21,9 @@ def final_one():
     prevtable2 = ""
     try:
         while True:
-            # get the date
-            today = str(datetime.now().strftime("%d.%m.%Y - %H:%M:%S"))
-
             # write checks in log
             with open(log_path, "a") as log:
-                log.write(today + ":\n")
+                log.write(get_date() + ":\n")
                 log.write("Checking for news...\n")
                 log.write("\n")
 
@@ -64,7 +63,7 @@ def final_one():
     # When the login data is wrong
     except IndexError:
         with open(log_path, "a") as log:
-            log.write(today + ":\n")
+            log.write(get_date() + ":\n")
             log.write("-- Connection Error --\n")
             log.write("Couldn't crawl Elternportal" + "\n")
             log.write("\n")
@@ -74,7 +73,7 @@ def final_one():
     # Everything else
     except Exception as e:
         with open(log_path, "a") as log:
-            log.write(today + ":\n")
+            log.write(get_date() + ":\n")
             log.write("-- Non Email Error --\n")
             log.write(str(e) + "\n")
             log.write("\n")
