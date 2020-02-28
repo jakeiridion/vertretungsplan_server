@@ -3,8 +3,6 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from CrawlerAndMail import WebCrawler, ConfigReader
-import time
-import main
 
 # Use stop variable to break the programm ones an error occurs in main file
 stop = 0
@@ -19,7 +17,7 @@ def send_mail():
     html = WebCrawler.f.get_entire_table()
     msg = MIMEMultipart('alternative')
 
-    with open("email_list") as elist:
+    with open(ConfigReader.email_list_path) as elist:
         for email in elist:
             succes = 0
             # Continue if its a comment
@@ -41,10 +39,9 @@ def send_mail():
                 server.sendmail(ConfigReader.bot_email, email, msg.as_string())
 
             except Exception as e:
-
                 # Write Error in log files
-                with open(main.log_path, "a") as log:
-                    log.write(main.get_date() + ":\n")
+                with open(ConfigReader.log_path, "a") as log:
+                    log.write(ConfigReader.get_date() + ":\n")
                     log.write("-- Email Error --\n")
                     log.write(str(e) + "\n")
                     log.write("\n")
@@ -52,31 +49,8 @@ def send_mail():
                 # Error occurred:
                 succes = 1
 
-            finally:
-
-                # If the server variable couldnt be created it means that the connection to the email server couldn't be
-                # established due to Wrong login data
-                try:
-                    server.quit()
-                except UnboundLocalError:
-
-                    # Write Error in log files
-                    with open(main.log_path, "a") as log:
-                        log.write(main.get_date() + ":\n")
-                        log.write("-- Email Error --\n")
-                        log.write("Couldnt Reach Email-Server, Check your Bot Configurations" + "\n")
-                        log.write("\n")
-
-                    print("")
-                    print("Error: Check your Bot Configurations")
-                    stop = 1
-
-                # Wait a half second before sending the next email
-                time.sleep(0.5)
-
-            # Writes a successful entry in log files when no  error occurred
             if succes == 0:
-                with open(main.log_path, "a") as log:
-                    log.write(main.get_date() + ":\n")
+                with open(ConfigReader.log_path, "a") as log:
+                    log.write(ConfigReader.get_date() + ":\n")
                     log.write("Email successfully send to: " + email + "\n")
                     log.write("\n")

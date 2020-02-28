@@ -1,20 +1,12 @@
 # Import required packages
-from CrawlerAndMail import WebCrawler, SendMail, ConfigReader
+from CrawlerAndMail import WebCrawler, SendMail, ConfigReader, FirstCheck
 import time
-from datetime import datetime
-import os
-
-log_path = os.path.join(os.path.dirname(__file__), "log")
 
 
-def get_date():
-    return str(datetime.now().strftime("%d.%m.%Y - %H:%M:%S"))
-
-
-# method to be executed at the end
+# method to be executed
 def final_one():
-    print("Application Started.")
-    print("Remember to check the log for Error Messages -> " + log_path)
+    print("{start}Application Started.{end}".format(start=FirstCheck.colors.WARNING, end=FirstCheck.colors.ENDC))
+    print("Remember to check the log for Error Messages -> " + ConfigReader.log_path)
     print("To Exit Press: ⌃C")
 
     prevtable1 = ""
@@ -22,8 +14,8 @@ def final_one():
     try:
         while True:
             # write checks in log
-            with open(log_path, "a") as log:
-                log.write(get_date() + ":\n")
+            with open(ConfigReader.log_path, "a") as log:
+                log.write(ConfigReader.get_date() + ":\n")
                 log.write("Checking for news...\n")
                 log.write("\n")
 
@@ -39,16 +31,13 @@ def final_one():
                     time.sleep(ConfigReader.wait_between_check)
                     continue
 
+                # Remembers the previous tables on the website so that it doesn't send
+                # the same information twice
                 prevtable1 = table1
                 prevtable2 = table2
 
-                # Send the email
+                # Sends the email
                 SendMail.send_mail()
-
-                # Break when Error occurred
-                if SendMail.stop == 1:
-                    break
-
                 time.sleep(ConfigReader.wait_between_check)
 
             else:
@@ -58,22 +47,12 @@ def final_one():
     # When terminating the app
     except KeyboardInterrupt:
         print("")
-        print("Application terminated")
-
-    # When the login data is wrong
-    except IndexError:
-        with open(log_path, "a") as log:
-            log.write(get_date() + ":\n")
-            log.write("-- Connection Error --\n")
-            log.write("Couldn't crawl Elternportal" + "\n")
-            log.write("\n")
-            print("")
-            print("Error: Check your Elternportal login data")
+        print("{start}Application Terminated.{end}".format(start=FirstCheck.colors.WARNING, end=FirstCheck.colors.ENDC))
 
     # Everything else
     except Exception as e:
-        with open(log_path, "a") as log:
-            log.write(get_date() + ":\n")
+        with open(ConfigReader.log_path, "a") as log:
+            log.write(ConfigReader.get_date() + ":\n")
             log.write("-- Non Email Error --\n")
             log.write(str(e) + "\n")
             log.write("\n")
@@ -83,4 +62,6 @@ def final_one():
 
 
 if __name__ == "__main__":
-    final_one()
+    if FirstCheck.do_the_check():
+        print("")
+        final_one()
