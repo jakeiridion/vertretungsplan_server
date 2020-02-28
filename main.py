@@ -1,12 +1,13 @@
 # Import required packages
 from CrawlerAndMail import WebCrawler, SendMail, ConfigReader, FirstCheck
+from CrawlerAndMail.WriteLog import write_log
 import time
 
 
 # method to be executed
 def final_one():
     print("{start}Application Started.{end}".format(start=FirstCheck.colors.WARNING, end=FirstCheck.colors.ENDC))
-    print("Remember to check the log for Error Messages -> " + ConfigReader.log_path)
+    print("Remember to check the log! -> " + ConfigReader.log_path)
     print("To Exit Press: ⌃C")
 
     prevtable1 = ""
@@ -14,10 +15,7 @@ def final_one():
     try:
         while True:
             # write checks in log
-            with open(ConfigReader.log_path, "a") as log:
-                log.write(ConfigReader.get_date() + ":\n")
-                log.write("Checking for news...\n")
-                log.write("\n")
+            write_log("Checking for news...")
 
             # Fetches the website
             fetch = WebCrawler.f.get_table_content()
@@ -40,6 +38,7 @@ def final_one():
                 SendMail.send_mail()
                 time.sleep(ConfigReader.wait_between_check)
 
+            # if there is nothing new it just checks later
             else:
                 time.sleep(ConfigReader.wait_between_check)
                 continue
@@ -51,16 +50,25 @@ def final_one():
 
     # Everything else
     except Exception as e:
-        with open(ConfigReader.log_path, "a") as log:
-            log.write(ConfigReader.get_date() + ":\n")
-            log.write("-- Non Email Error --\n")
-            log.write(str(e) + "\n")
-            log.write("\n")
+        write_log("An Error occurred:", e,
+                  "The program will precede in " + str(ConfigReader.wait_between_error_retry) + " seconds.")
 
-        time.sleep(ConfigReader.wait_between_error_retry)
+        # if the program is terminated during the error retry timer
+        try:
+            time.sleep(ConfigReader.wait_between_error_retry)
+
+        except KeyboardInterrupt:
+            print("")
+            print("{start}Application Terminated.{end}".format(start=FirstCheck.colors.WARNING,
+                                                               end=FirstCheck.colors.ENDC))
+            # So that the final_one() Method isn't run afterwards
+            return
+
+        # if the program isn't terminated the script repeats itself
         final_one()
 
 
+# The script being run if the check (FirstCheck.do_the_check()) comes out right
 if __name__ == "__main__":
     if FirstCheck.do_the_check():
         print("")

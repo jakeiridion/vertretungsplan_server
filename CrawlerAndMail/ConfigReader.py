@@ -11,7 +11,6 @@ cfg = configparser.ConfigParser()
 cfg.read(cfg_path)
 
 url = cfg.get("Settings", "url")
-# Create post and other url:
 post_url = urljoin(url, "/includes/project/auth/login.php")
 end_url = urljoin(url, "/service/vertretungsplan")
 
@@ -29,7 +28,6 @@ wait_between_error_retry = int(cfg.get("Settings", "wait_between_error_retry"))
 
 # Log and date variables:
 log_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "log")
-
 email_list_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "email_list")
 
 

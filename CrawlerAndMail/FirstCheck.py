@@ -26,25 +26,25 @@ def check_response_code():
         return False
 
 
-def check_logindata():
+def check_elternportal_logindata():
     with requests.session() as s:
         login_data = {"username": ConfigReader.elternportal_email,
                       "password": ConfigReader.elternportal_password}
 
         r = s.get(ConfigReader.url)
         r = s.post(ConfigReader.post_url, data=login_data)
+
         if "Benutzername/Passwort inkorrekt." in r.text:
             return False
-
         else:
             return True
 
 
-def check_email():
-    def port_error(signum, frame):
-        raise Exception("Wrong Port")
+def check_bot_data():
+    def bot_error(signum, frame):
+        raise Exception("False Bot data")
 
-    signal.signal(signal.SIGALRM, port_error)
+    signal.signal(signal.SIGALRM, bot_error)
     signal.alarm(5)
 
     try:
@@ -52,7 +52,7 @@ def check_email():
         server.starttls()
         server.login(ConfigReader.bot_email, ConfigReader.bot_password)
 
-    except Exception as e:
+    except Exception:
         return False
 
     finally:
@@ -68,25 +68,24 @@ def do_the_check():
     print("Checking for {start}Connection Errors{end} and for possible {start}wrong login data{end}...".format(start=colors.OKGREEN, end=colors.ENDC))
     print("")
 
-    checks["Internet Connection:\t\t\t\t"] = check_internet_connection()
+    checks["Internet Connection:" + "\t" * 5] = check_internet_connection()
 
-    # If there is no connection every test will fail so it just returns False and informs the user
+    # If there is no connection every test will fail so this just returns False and informs the user:
     if check_internet_connection() is False:
-        print(list(checks.keys())[0] + colors.FAIL + "Error" + colors.ENDC)
+        print("Internet Connection: " + colors.FAIL + "Error!" + colors.ENDC)
         print("")
         print("{font}{underline}{color}Due to no internet connection all the other tests will come out wrong.{end}".format(font=colors.BOLD, underline=colors.UNDERLINE, color=colors.FAIL, end=colors.ENDC))
         print("{font}{color}{underline}So fix your Internet Connection!{end}".format(font=colors.BOLD, underline=colors.UNDERLINE, color=colors.FAIL, end=colors.ENDC))
         return False
 
-    checks["Connection to Elternportal Website:\t"] = check_response_code()
-    checks["Login Data for Elternportal:\t\t"] = check_logindata()
-    checks["Login Data for Bot email service:\t"] = check_email()
+    checks["Connection to the Elternportal Website:" + "\t" * 1] = check_response_code()
+    checks["Login Data for Elternportal:" + "\t" * 3] = check_elternportal_logindata()
+    checks["Login Data for the Bot email service:" + "\t" * 1] = check_bot_data()
 
     for check in checks:
-        print(check + str(checks[check]).replace("True", colors.OKBLUE + "Working" + colors.ENDC).replace("False", colors.FAIL + "Error" + colors.ENDC))
+        print(check + str(checks[check]).replace("True", colors.OKBLUE + "Working." + colors.ENDC).replace("False", colors.FAIL + "Error!" + colors.ENDC))
 
     if False in checks.values():
         return False
-
     else:
         return True

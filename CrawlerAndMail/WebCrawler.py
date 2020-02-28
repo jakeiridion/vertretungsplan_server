@@ -5,8 +5,8 @@ import time
 from CrawlerAndMail import ConfigReader
 
 
-# Create stand variable for later putting the date in the email Object
-stand = ""
+# Create stand variable for later putting the date in the email's Subject
+date = ""
 
 
 # Create Crawler class
@@ -35,13 +35,13 @@ class Crawler:
         for line in soup.find("div", attrs={"class": "main_center"}):
             # Add a Space in the table for ascetics
             if "KW" in str(line) and umbruch == 1:
-                fin.append(
-                    '<table class="table" style="min-width: 75%;"><tbody><tr class=""><td width="100%" colspan="6" align="center" valign="top"><br></td></tr></tbody></table>')
+                fin.append('<table class="table" style="min-width: 75%;"><tbody><tr class=""><td width="100%" '
+                           'colspan="6" align="center" valign="top"><br></td></tr></tbody></table>')
 
             # Set date in the Stand variable
             if "Stand" in str(line):
-                global stand
-                stand = line.text
+                global date
+                date = line.text
 
             umbruch = 1
             fin.append(str(line))
