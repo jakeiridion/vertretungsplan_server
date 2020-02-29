@@ -29,4 +29,5 @@ def send_mail():
             server.login(ConfigReader.bot_email, ConfigReader.bot_password)
             server.sendmail(ConfigReader.bot_email, email, msg.as_string())
 
-            write_log("Email successfully send to: " + email)
+            # strip because there is a \n at the end
+            write_log("Email successfully send to: " + email.rstrip())
