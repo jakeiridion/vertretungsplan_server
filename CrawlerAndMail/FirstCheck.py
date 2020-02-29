@@ -2,6 +2,7 @@ import signal
 import smtplib
 from CrawlerAndMail import ConfigReader
 from CrawlerAndMail.Colors import colors
+from CrawlerAndMail.WriteLog import write_log
 import requests
 
 
@@ -21,7 +22,6 @@ def check_response_code():
     code = requests.get(ConfigReader.url)
     if "200" in str(code):
         return True
-
     else:
         return False
 
@@ -72,6 +72,14 @@ def do_the_check():
 
     # If there is no connection every test will fail so this just returns False and informs the user:
     if check_internet_connection() is False:
+        # Logs the Connection Error and informs about Checking the connection
+        write_log("Initializing the connection and login data check:",
+                  "-------------------------------------------------",
+                  "Internet Connection: Error",
+                  "-------------------------------------------------",
+                  "Due to no internet connection all the other tests will come out wrong",
+                  "So fix your Internet Connection!")
+
         print("Internet Connection: " + colors.FAIL + "Error!" + colors.ENDC)
         print("")
         print("{font}{underline}{color}Due to no internet connection all the other tests will come out wrong.{end}".format(font=colors.BOLD, underline=colors.UNDERLINE, color=colors.FAIL, end=colors.ENDC))
@@ -81,6 +89,17 @@ def do_the_check():
     checks["Connection to the Elternportal Website:" + "\t" * 1] = check_response_code()
     checks["Login Data for Elternportal:" + "\t" * 3] = check_elternportal_logindata()
     checks["Login Data for the Bot email service:" + "\t" * 1] = check_bot_data()
+
+    # Writes the first check in the log and replaces True with working and False with Error!
+    keys = list(checks.keys())
+    values = list(checks.values())
+    write_log("Initializing the connection and login data check:",
+              "-------------------------------------------------",
+              keys[0] + str(values[0]).replace("True", "Working.").replace("False", "Error!"),
+              keys[1] + str(values[1]).replace("True", "Working.").replace("False", "Error!"),
+              keys[2] + str(values[2]).replace("True", "Working.").replace("False", "Error!"),
+              keys[3] + str(values[3]).replace("True", "Working.").replace("False", "Error!"),
+              "-------------------------------------------------",)
 
     for check in checks:
         print(check + str(checks[check]).replace("True", colors.OKBLUE + "Working." + colors.ENDC).replace("False", colors.FAIL + "Error!" + colors.ENDC))

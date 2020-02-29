@@ -4,14 +4,18 @@ from CrawlerAndMail.WriteLog import write_log
 import time
 
 
+# if the program re runs it self after an error it doesn't forget the prevtables
+# they wont be set back to prevtable1 = "" in th method final_one()
+# so the program still knows what happend earlier to the tables
+prevtable1 = ""
+prevtable2 = ""
+
+
 # method to be executed
 def final_one():
-    print("{start}Application Started.{end}".format(start=FirstCheck.colors.WARNING, end=FirstCheck.colors.ENDC))
-    print("Remember to check the log! -> " + ConfigReader.log_path)
-    print("To Exit Press: ⌃C")
+    global prevtable1
+    global prevtable2
 
-    prevtable1 = ""
-    prevtable2 = ""
     try:
         while True:
             # write checks in log
@@ -45,6 +49,8 @@ def final_one():
 
     # When terminating the app
     except KeyboardInterrupt:
+        write_log("Application Terminated.")
+
         print("")
         print("{start}Application Terminated.{end}".format(start=FirstCheck.colors.WARNING, end=FirstCheck.colors.ENDC))
 
@@ -58,18 +64,32 @@ def final_one():
             time.sleep(ConfigReader.wait_between_error_retry)
 
         except KeyboardInterrupt:
+            write_log("Application Terminated.")
+
             print("")
             print("{start}Application Terminated.{end}".format(start=FirstCheck.colors.WARNING,
                                                                end=FirstCheck.colors.ENDC))
-            # So that the final_one() Method isn't run afterwards
-            return
 
-        # if the program isn't terminated the script repeats itself
+            # So that the final_one() Method isn't run afterwards
+            return None
+
+        # if the program isn't terminated the script logs and repeats itself
+        write_log("The program is preceding now.")
         final_one()
+
+
+# The text the user gets when running the app. And also the start will be logged
+def info_text():
+    write_log("Application Started.")
+
+    print("{start}Application Started.{end}".format(start=FirstCheck.colors.WARNING, end=FirstCheck.colors.ENDC))
+    print("Remember to check the log! -> " + ConfigReader.log_path)
+    print("To Exit Press: ⌃C")
 
 
 # The script being run if the check (FirstCheck.do_the_check()) comes out right
 if __name__ == "__main__":
     if FirstCheck.do_the_check():
         print("")
+        info_text()
         final_one()
