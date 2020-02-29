@@ -68,7 +68,7 @@ def do_the_check():
     print("Checking for {start}Connection Errors{end} and for possible {start}wrong login data{end}...".format(start=colors.OKGREEN, end=colors.ENDC))
     print("")
 
-    checks["Internet Connection:" + "\t" * 5] = check_internet_connection()
+    checks["Internet Connection:" + "\t" * 3] = check_internet_connection()
 
     # If there is no connection every test will fail so this just returns False and informs the user:
     if check_internet_connection() is False:
@@ -87,7 +87,7 @@ def do_the_check():
         return False
 
     checks["Connection to the Elternportal Website:" + "\t" * 1] = check_response_code()
-    checks["Login Data for Elternportal:" + "\t" * 3] = check_elternportal_logindata()
+    checks["Login Data for Elternportal:" + "\t" * 2] = check_elternportal_logindata()
     checks["Login Data for the Bot email service:" + "\t" * 1] = check_bot_data()
 
     # Writes the first check in the log and replaces True with working and False with Error!
