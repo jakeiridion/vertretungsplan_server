@@ -33,14 +33,17 @@ def final_one():
                     time.sleep(ConfigReader.wait_between_check)
                     continue
 
-                # Remembers the previous tables on the website so that it doesn't send
-                # the same information twice
-                prevtable1 = table1
-                prevtable2 = table2
+                # logging the change
+                write_log("Change Detected.", "Preceding to send emails.")
 
                 # Sends the email
                 SendMail.send_mail()
                 time.sleep(ConfigReader.wait_between_check)
+
+                # Remembers the previous tables on the website so that it doesn't send
+                # the same information twice
+                prevtable1 = table1
+                prevtable2 = table2
 
             # if there is nothing new it just checks later
             else:
