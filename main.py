@@ -4,95 +4,106 @@ from CrawlerAndMail.WriteLog import write_log
 import time
 
 
-# if the program re runs it self after an error it doesn't forget the prevtables
-# they wont be set back to prevtable1 = "" in th method final_one()
-# so the program still knows what happend earlier to the tables
-prevtable1 = ""
-prevtable2 = ""
+class Application:
+    def __init__(self):
+        # Previous tables to remember the day before
+        self.prevtable1 = ""
+        self.prevtable2 = ""
+        # Tables into which the crawler stores the data from the internet
+        self.table1 = ""
+        self.table2 = ""
+        # When the program should be terminated
+        self.terminate_app = False
 
+    def fetch_tables(self):
+        # fetches the website
+        write_log("Checking for news...")
 
-# method to be executed
-def final_one():
-    global prevtable1
-    global prevtable2
+        fetch = WebCrawler.f.get_table_content()
+        self.table1 = str(fetch[0])
+        self.table2 = str(fetch[1])
+        return self.table1, self.table2
 
-    try:
-        while True:
-            # write checks in log
-            write_log("Checking for news...")
+    def check_the_information(self):
+        # checks if the email should be send. returns true if the information should be send
 
-            # Fetches the website
-            fetch = WebCrawler.f.get_table_content()
-            table1 = str(fetch[0])
-            table2 = str(fetch[1])
+        # if this is not here fetch_tables would never be ran
+        table1, table2 = self.fetch_tables()
 
-            # Continues when there is nothing new or if something new just moved up a day
-            if "Keine Vertretungen" not in table1 or "Keine Vertretungen" not in table2:
-                if (prevtable2 == table1 and "Keine Vertretungen" in table2) or (
-                        table1 == prevtable1 and table2 == prevtable2):
-                    time.sleep(ConfigReader.wait_between_check)
-                    continue
+        if "Keine Vertretungen" not in table1 or "Keine Vertretungen" not in table2:
+            if (self.prevtable2 == table1 and "Keine Vertretungen" in table2) or (
+                    table1 == self.prevtable1 and table2 == self.prevtable2):
+                return False
+            return True
 
-                # logging the change
-                write_log("Change Detected.", "Preceding to send emails.")
+        return False
 
-                # Sends the email
-                SendMail.send_mail()
-                time.sleep(ConfigReader.wait_between_check)
+    def update_prevtables(self):
+        # Remembers the previous tables on the website so that it doesn't send
+        # the same information twice
+        self.prevtable1 = self.table1
+        self.prevtable2 = self.table2
 
-                # Remembers the previous tables on the website so that it doesn't send
-                # the same information twice
-                prevtable1 = table1
-                prevtable2 = table2
+    def sleep_between_check(self):
+        time.sleep(ConfigReader.wait_between_check)
 
-            # if there is nothing new it just checks later
-            else:
-                time.sleep(ConfigReader.wait_between_check)
-                continue
+    def sleep_between_error(self):
+        time.sleep(ConfigReader.wait_between_error_retry)
 
-    # When terminating the app
-    except KeyboardInterrupt:
+    def exception_keyboard_interrupt(self):
+        # what to do when the app is stopped
         write_log("Application Terminated.")
-
         print("")
         print("{start}Application Terminated.{end}".format(start=FirstCheck.colors.WARNING, end=FirstCheck.colors.ENDC))
+        self.terminate_app = True
 
-    # Everything else
-    except Exception as e:
-        write_log("An Error occurred:", e,
+    def exception_everything_else(self, exception):
+        # if an error occures its being written down in the log
+        write_log("An Error occurred:", exception,
                   "The program will precede in " + str(ConfigReader.wait_between_error_retry) + " seconds.")
 
-        # if the program is terminated during the error retry timer
         try:
-            time.sleep(ConfigReader.wait_between_error_retry)
+            self.sleep_between_error()
+        except KeyboardInterrupt:
+            self.exception_keyboard_interrupt()
+
+    def start_loop(self):
+        while True:
+            if self.check_the_information():
+                write_log("Change Detected.", "Preceding to send emails.")
+                SendMail.send_mail()
+                self.update_prevtables()
+
+            self.sleep_between_check()
+
+    def run_application(self):
+        try:
+            self.start_loop()
 
         except KeyboardInterrupt:
-            write_log("Application Terminated.")
-
-            print("")
-            print("{start}Application Terminated.{end}".format(start=FirstCheck.colors.WARNING,
-                                                               end=FirstCheck.colors.ENDC))
-
-            # So that the final_one() Method isn't run afterwards
+            self.exception_keyboard_interrupt()
+            # So that self.run_application() isn't run afterwards
             return None
 
-        # if the program isn't terminated the script logs and repeats itself
-        write_log("The program is preceding now.")
-        final_one()
+        except Exception as e:
+            self.exception_everything_else(e)
+            if self.terminate_app is True:
+                return None
+            write_log("The program is preceding now.")
+
+        self.run_application()
+
+    def info_text(self):
+        write_log("Application Started.")
+
+        print("{start}Application Started.{end}".format(start=FirstCheck.colors.WARNING, end=FirstCheck.colors.ENDC))
+        print("Remember to check the log! -> " + ConfigReader.log_path)
+        print("To Exit Press: ⌃C")
 
 
-# The text the user gets when running the app. And also the start will be logged
-def info_text():
-    write_log("Application Started.")
-
-    print("{start}Application Started.{end}".format(start=FirstCheck.colors.WARNING, end=FirstCheck.colors.ENDC))
-    print("Remember to check the log! -> " + ConfigReader.log_path)
-    print("To Exit Press: ⌃C")
-
-
-# The script being run if the check (FirstCheck.do_the_check()) comes out right
 if __name__ == "__main__":
     if FirstCheck.do_the_check():
         print("")
-        info_text()
-        final_one()
+        app = Application()
+        app.info_text()
+        app.run_application()
