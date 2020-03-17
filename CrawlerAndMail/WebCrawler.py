@@ -1,19 +1,14 @@
-# Import required packages
 import requests
 from bs4 import BeautifulSoup
 import time
 from CrawlerAndMail import ConfigReader
 
 
-# Create stand variable for later putting the date in the email's Subject
-date = ""
-
-
-# Create Crawler class
 class Crawler:
+    def __init__(self):
+        self.soup = None
 
-    # Returns the ceawled page after logging into it
-    def get_soup(self):
+    def fetch_soup(self):
         with requests.session() as s:
             login_data = {"username": ConfigReader.elternportal_email,
                           "password": ConfigReader.elternportal_password}
@@ -23,40 +18,63 @@ class Crawler:
             r = s.post(ConfigReader.post_url, data=login_data)
             r = s.get(ConfigReader.end_url)
             soup = BeautifulSoup(r.text, "html.parser")
-
+            self.soup = soup
         return soup
 
-    # Returns the main_table from get_soup
-    def get_entire_table(self):
-        umbruch = 0
-        soup = f.get_soup()
-        fin = []
+    # this method will be called first in the main file so it is the only one
+    # that needs to actually crawl the website with fetch_soup().
+    # the rest of the methods can just use the self.soup variable for information.
+    def fetch_table_content(self):
+        soup = self.fetch_soup()
+        table_content = soup.find_all("table", attrs={"class": "table"})
+        return table_content
 
-        for line in soup.find("div", attrs={"class": "main_center"}):
-            # Add a Space in the table for ascetics
-            if "KW" in str(line) and umbruch == 1:
-                fin.append('<table class="table" style="min-width: 75%;"><tbody><tr class=""><td width="100%" '
-                           'colspan="6" align="center" valign="top"><br></td></tr></tbody></table>')
+    def fetch_table(self):
+        soup = self.soup
+        table = soup.find("div", attrs={"class": "main_center"})
+        return table
 
-            # Set date in the Stand variable
-            if "Stand" in str(line):
-                global date
-                date = line.text
+    def turn_table_to_list(self):
+        table_list = []
+        for line in self.fetch_table():
+            table_list.append(str(line))
+        return table_list
 
-            umbruch = 1
-            fin.append(str(line))
+    def pop_warning_messages(self):
+        table = self.turn_table_to_list()
+        table.pop()
+        table.pop()
+        return table
 
-        # Pop the useless stuff like the date and the rest contained in the main table
-        fin.pop()
-        fin.pop()
-        vaulue = "\n".join(fin)
+    def insert_gap(self):
+        # kw = Kalender Woche
+        # I use it to see when i need to place a gap so the mail doesn't look so crowded
+        # this however is only for aesthetic reasons.
+        kw_counter = 0
+        list_counter = 0
+        gap = str('<table class="table" style="min-width: 75%;"><tbody><tr class=""><td width="100%" '
+                  'colspan="6" align="center" valign="top"><br></td></tr></tbody></table>')
 
-        return vaulue
+        table = self.pop_warning_messages()
+        for line in table:
+            if "KW" in line and kw_counter == 1:
+                table.insert(list_counter, gap)
+                break
 
-    # Returns the content of the tables to compare them later in the main file
-    def get_table_content(self):
-        soup = f.get_soup()
-        return soup.find_all("table", attrs={"class": "table"})
+            elif "KW" in line and kw_counter == 0:
+                kw_counter = 1
+
+            list_counter = list_counter + 1
+        return table
+
+    def fetch_finished_table(self):
+        table_str = "\n".join(self.insert_gap())
+        return table_str
+
+    def fetch_date(self):
+        soup = self.soup
+        date = soup.find("div", attrs={"class": "list full_width"}).text
+        return date
 
 
-f = Crawler()
+crawler = Crawler()

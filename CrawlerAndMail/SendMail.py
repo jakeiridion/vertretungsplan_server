@@ -8,7 +8,7 @@ from CrawlerAndMail.WriteLog import write_log
 
 # Sends mail to everyone in the email_list
 def send_mail():
-    html = WebCrawler.f.get_entire_table()
+    html = WebCrawler.crawler.fetch_finished_table()
     msg = MIMEMultipart('alternative')
 
     with open(ConfigReader.email_list_path) as elist:
@@ -19,7 +19,7 @@ def send_mail():
 
             msg["From"] = ConfigReader.bot_email
             msg["To"] = email
-            msg["Subject"] = "Vertretungsplan Info. " + WebCrawler.date
+            msg["Subject"] = "Vertretungsplan Info. " + WebCrawler.crawler.fetch_date()
 
             part = MIMEText(html, 'html')
             msg.attach(part)

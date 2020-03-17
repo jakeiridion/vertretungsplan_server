@@ -19,7 +19,7 @@ class Application:
         # fetches the website
         write_log("Checking for news...")
 
-        fetch = WebCrawler.f.get_table_content()
+        fetch = WebCrawler.crawler.fetch_table_content()
         self.table1 = str(fetch[0])
         self.table2 = str(fetch[1])
         return self.table1, self.table2
